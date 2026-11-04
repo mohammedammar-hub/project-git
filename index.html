@@ -164,6 +164,7 @@
     box-shadow: 0 0 16px rgba(0,229,255,.35); transition: transform .15s;
   }
   .btn:active { transform: scale(.96); }
+  .btn.ghost { background: rgba(255,255,255,.1); color: var(--text); box-shadow: none; }
 
   /* Journal */
   .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
@@ -183,12 +184,20 @@
   .coach .ai { font-size: 1.6rem; }
   .coach p { font-size: .92rem; line-height: 1.5; }
 
+  /* Fitness */
+  .meter { height: 14px; background: rgba(255,255,255,.06); border-radius: 99px; overflow: hidden; margin-top: 14px; }
+  .meter > div { height: 100%; width: 0; border-radius: 99px; transition: width 1s; }
+  #wchart { height: 140px; margin-top: 16px; }
+  .row { display: flex; gap: 32px; flex-wrap: wrap; }
+  .btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
   /* ---------- Responsive ---------- */
   @media (max-width: 900px) {
     .span-4, .span-6, .span-8, .span-3 { grid-column: span 12; }
     .stats-4 { grid-column: span 6 !important; }
     .stages { grid-template-columns: repeat(2, 1fr); }
     form.add { grid-template-columns: 1fr 1fr; }
+    form.add.two { grid-template-columns: 1fr auto; }
   }
   @media (max-width: 560px) {
     .nav button span { display: none; }
@@ -253,6 +262,10 @@
       <div class="card span-3 stats-4" style="--accent: var(--green)"><h2>HRV</h2><div class="stat"><div class="num"><span id="o-hrv"></span><small>ms</small></div><div class="trend up">▲ 6% vs 7-day avg</div></div></div>
       <div class="card span-3 stats-4" style="--accent: var(--cyan)"><h2>Blood Oxygen</h2><div class="stat"><div class="num"><span id="o-spo2"></span><small>%</small></div><div class="trend" style="color:var(--muted)">Normal range</div></div></div>
       <div class="card span-3 stats-4" style="--accent: var(--yellow)"><h2>Calories</h2><div class="stat"><div class="num"><span id="o-cal"></span><small>kcal</small></div><div class="trend" style="color:var(--muted)">Active + resting</div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--green)"><h2>VO₂ Max</h2><div class="stat"><div class="num"><span id="o-vo2">--</span><small>ml/kg/min</small></div><div class="trend" id="o-vo2-lvl" style="color:var(--muted)"></div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--yellow)"><h2>Steps</h2><div class="stat"><div class="num"><span id="o-steps">--</span></div><div class="trend" style="color:var(--muted)" id="o-steps-pct"></div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--cyan)"><h2>Water</h2><div class="stat"><div class="num"><span id="o-water">--</span><small>ml</small></div><div class="trend" style="color:var(--muted)" id="o-water-pct"></div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--violet)"><h2>Weight</h2><div class="stat"><div class="num"><span id="o-weight">--</span><small>kg</small></div><div class="trend" style="color:var(--muted)" id="o-weight-d"></div></div></div>
     </div>
   </section>
 
@@ -368,6 +381,56 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== FITNESS ===== -->
+  <section class="view" id="fitness">
+    <div class="grid">
+      <div class="card span-4" style="--accent: var(--green)">
+        <h2>VO₂ Max</h2>
+        <div class="stat"><div class="num"><span id="f-vo2">--</span><small>ml/kg/min</small></div><div class="trend" id="f-vo2-lvl"></div></div>
+        <div class="meter"><div id="f-vo2-bar" style="background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+        <div class="gauge-label"><span>Fair</span><span>Good</span><span>Excellent</span><span>Superior</span></div>
+        <p style="color:var(--muted);font-size:.78rem;margin-top:10px" id="f-vo2-src"></p>
+        <form class="add two" id="vo2-form" style="grid-template-columns:1fr auto">
+          <input type="number" id="vo2-dist" placeholder="12-min run distance (m)" min="500" max="5000" required>
+          <button class="btn" type="submit">Refine</button>
+        </form>
+      </div>
+
+      <div class="card span-4" style="--accent: var(--yellow)">
+        <h2>Steps Goal</h2>
+        <div class="stat"><div class="num"><span id="f-steps"></span><small id="f-steps-goal"></small></div></div>
+        <div class="meter"><div id="f-steps-bar" style="background:var(--yellow)"></div></div>
+        <div class="gauge-label"><span id="f-steps-pct"></span><span id="f-steps-km"></span></div>
+      </div>
+
+      <div class="card span-4" style="--accent: var(--cyan)">
+        <h2>Water Intake</h2>
+        <div class="stat"><div class="num"><span id="f-water"></span><small id="f-water-goal"></small></div></div>
+        <div class="meter"><div id="f-water-bar" style="background:var(--cyan)"></div></div>
+        <div class="btn-row">
+          <button class="btn" data-water="250">+250</button>
+          <button class="btn" data-water="500">+500</button>
+          <button class="btn ghost" data-water="-250">Undo</button>
+        </div>
+      </div>
+
+      <div class="card span-12" style="--accent: var(--violet)">
+        <h2>Weight Trend · 7 Days</h2>
+        <div class="row">
+          <div class="stat"><div class="num"><span id="f-w-now"></span><small>kg</small></div><div class="trend" style="color:var(--muted)">latest</div></div>
+          <div class="stat"><div class="num"><span id="f-w-avg"></span><small>kg</small></div><div class="trend" style="color:var(--muted)">7-day average</div></div>
+          <div class="stat"><div class="num"><span id="f-w-bmi"></span></div><div class="trend" style="color:var(--muted)">BMI</div></div>
+          <div class="stat"><div class="num" id="f-w-delta"></div><div class="trend" style="color:var(--muted)">change this week</div></div>
+        </div>
+        <canvas id="wchart"></canvas>
+        <form class="add two" id="w-form" style="grid-template-columns:1fr auto;max-width:360px">
+          <input type="number" id="w-in" placeholder="Today's weight (kg)" step="0.1" min="30" max="250" required>
+          <button class="btn" type="submit">+ Log</button>
+        </form>
+      </div>
+    </div>
+  </section>
 </div>
 
 <!-- Bottom nav -->
@@ -377,6 +440,7 @@
   <button data-view="sleep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>Sleep</span></button>
   <button data-view="recovery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><span>Recovery</span></button>
   <button data-view="strain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Strain</span></button>
+  <button data-view="fitness"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg><span>Fitness</span></button>
   <button data-view="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h8M8 13h6"/></svg><span>Journal</span></button>
 </nav>
 
@@ -410,7 +474,13 @@ const data = {
   ],
   // [stage, minutes]  stage: 0 Awake, 1 REM, 2 Light, 3 Deep
   hypnogram: [[2,15],[3,40],[2,25],[1,15],[0,4],[2,30],[3,35],[2,20],[1,25],[2,35],[0,3],[3,15],[2,30],[1,35],[2,25],[0,5],[1,30],[2,20],[0,9]],
-  journal: ["Alcohol", "Caffeine after 2 PM", "Late meal", "Screen time in bed", "Meditation", "Hydrated well", "Stretching", "Felt stressed"]
+  journal: ["Alcohol", "Caffeine after 2 PM", "Late meal", "Screen time in bed", "Meditation", "Hydrated well", "Stretching", "Felt stressed"],
+
+  /* --- Fitness additions --- */
+  weight: [72.4, 72.1, 72.3, 71.9, 72.0, 71.7, 71.6], // kg, last 7 days
+  heightCm: 175,
+  water: 1250, waterGoal: 2500,                        // ml
+  stepGoal: 10000
 };
 /* ===================================================================== */
 
@@ -604,6 +674,82 @@ $("save-journal").addEventListener("click", () => {
   setTimeout(() => $("journal-msg").textContent = "", 2000);
 });
 
+/* ================= Fitness tab ================= */
+// VO2 max: Uth–Sørensen estimate = 15.3 × (HRmax / HRrest). Refined with a 12-min Cooper run if entered.
+let vo2 = 15.3 * maxHR / data.rhr, vo2Source = "Estimated from max HR ÷ resting HR";
+const vo2Level = v => v >= 50 ? ["Superior", "up"] : v >= 42 ? ["Excellent", "up"] : v >= 35 ? ["Good", ""] : ["Fair", "down"];
+function renderVo2() {
+  const [lbl, cls] = vo2Level(vo2);
+  $("f-vo2").textContent = vo2.toFixed(1);
+  $("f-vo2-lvl").textContent = lbl; $("f-vo2-lvl").className = "trend " + cls;
+  $("f-vo2-bar").style.width = Math.min(100, Math.max(0, (vo2 - 20) / 40 * 100)) + "%";
+  $("f-vo2-src").textContent = vo2Source;
+  $("o-vo2").textContent = vo2.toFixed(1);
+  $("o-vo2-lvl").textContent = lbl;
+}
+$("vo2-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const cooper = ($("vo2-dist").value - 504.9) / 44.73;
+  vo2 = (vo2 + cooper) / 2;
+  vo2Source = "Blended: HR estimate + Cooper 12-min run test";
+  renderVo2(); e.target.reset();
+});
+
+function renderSteps() {
+  const pct = Math.min(100, data.steps / data.stepGoal * 100);
+  $("f-steps").textContent = data.steps.toLocaleString();
+  $("f-steps-goal").textContent = "/ " + data.stepGoal.toLocaleString();
+  $("f-steps-pct").textContent = Math.round(pct) + "% of goal";
+  $("f-steps-km").textContent = (data.steps * 0.00075).toFixed(1) + " km";
+  $("f-steps-bar").style.width = pct + "%";
+  $("o-steps").textContent = data.steps.toLocaleString();
+  $("o-steps-pct").textContent = Math.round(pct) + "% of " + data.stepGoal.toLocaleString();
+}
+
+function renderWater() {
+  const pct = Math.min(100, data.water / data.waterGoal * 100);
+  $("f-water").textContent = data.water + " ml";
+  $("f-water-goal").textContent = "/ " + data.waterGoal + " ml";
+  $("f-water-bar").style.width = pct + "%";
+  $("o-water").textContent = data.water;
+  $("o-water-pct").textContent = Math.round(pct) + "% of goal";
+}
+document.querySelectorAll("[data-water]").forEach(b => b.addEventListener("click", () => {
+  data.water = Math.max(0, data.water + +b.dataset.water); renderWater();
+}));
+
+function drawWeight() {
+  const cv = $("wchart"); if (!cv.offsetParent) return;
+  const { ctx, w, h } = setupCanvas(cv), v = data.weight.slice(-7);
+  const lo = Math.min(...v) - .3, hi = Math.max(...v) + .3, px = 24;
+  const X = i => px + i * (w - 2 * px) / Math.max(1, v.length - 1);
+  const Y = x => h - 16 - (x - lo) / (hi - lo) * (h - 36);
+  ctx.strokeStyle = "#a46bff"; ctx.lineWidth = 2.5; ctx.shadowColor = "#a46bff"; ctx.shadowBlur = 10; ctx.beginPath();
+  v.forEach((x, i) => i ? ctx.lineTo(X(i), Y(x)) : ctx.moveTo(X(i), Y(x)));
+  ctx.stroke(); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#e8f1ff"; ctx.font = "11px Inter"; ctx.textAlign = "center";
+  v.forEach((x, i) => { ctx.beginPath(); ctx.arc(X(i), Y(x), 3.5, 0, 7); ctx.fill(); ctx.fillText(x.toFixed(1), X(i), Y(x) - 10); });
+}
+function renderWeight() {
+  const w = data.weight.slice(-7), cur = w[w.length - 1];
+  const avg = w.reduce((s, x) => s + x, 0) / w.length, d = cur - w[0];
+  const dTxt = (d > 0 ? "+" : "") + d.toFixed(1) + " kg";
+  $("f-w-now").textContent = cur.toFixed(1);
+  $("f-w-avg").textContent = avg.toFixed(1);
+  $("f-w-bmi").textContent = (cur / Math.pow(data.heightCm / 100, 2)).toFixed(1);
+  $("f-w-delta").textContent = dTxt;
+  $("f-w-delta").style.color = d <= 0 ? "var(--green)" : "var(--yellow)";
+  $("o-weight").textContent = cur.toFixed(1);
+  $("o-weight-d").textContent = dTxt + " this week";
+  drawWeight();
+}
+$("w-form").addEventListener("submit", e => {
+  e.preventDefault();
+  data.weight.push(+$("w-in").value);
+  renderWeight(); e.target.reset();
+});
+renderVo2(); renderSteps(); renderWater(); renderWeight();
+
 /* Navigation */
 document.querySelectorAll("#nav button").forEach(btn => btn.addEventListener("click", () => {
   document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
@@ -613,9 +759,10 @@ document.querySelectorAll("#nav button").forEach(btn => btn.addEventListener("cl
   ecgCtx = null;
   if (btn.dataset.view === "sleep") drawHypno();
   if (btn.dataset.view === "heart") setTimeout(animateZones, 50);
+  if (btn.dataset.view === "fitness") drawWeight();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }));
-window.addEventListener("resize", () => { ecgCtx = null; drawHypno(); });
+window.addEventListener("resize", () => { ecgCtx = null; drawHypno(); drawWeight(); });
 </script>
 </body>
 </html>
