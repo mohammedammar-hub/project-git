@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA Band</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05070d;
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.07);
+    --line: rgba(120,200,255,0.14);
+    --text: #e8f1ff;
+    --muted: #7d8aa8;
+    --cyan: #00e5ff;
+    --green: #2bff88;
+    --yellow: #ffd23f;
+    --red: #ff3d6e;
+    --violet: #a46bff;
+    --blue: #3d8bff;
+    --r: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Inter", system-ui, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(0,229,255,.12), transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(164,107,255,.14), transparent 45%),
+      var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before { /* sci-fi grid */
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(circle at center, black 20%, transparent 75%);
+    opacity: .35;
+  }
+  .num, h1, h2, .brand { font-family: "Orbitron", sans-serif; }
+  .app { position: relative; max-width: 1200px; margin: 0 auto; padding: 20px 16px 110px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+  .brand { font-size: 1.5rem; font-weight: 900; letter-spacing: .2em; }
+  .brand span { color: var(--cyan); text-shadow: 0 0 14px var(--cyan); }
+  .device {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--glass); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 999px; font-size: .82rem; color: var(--muted);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: blink 2s infinite; display: inline-block; margin-right: 6px; }
+  @keyframes blink { 50% { opacity: .3; } }
+  .battery { display: inline-flex; align-items: center; gap: 6px; }
+  .battery i { width: 26px; height: 12px; border: 1.5px solid var(--muted); border-radius: 3px; position: relative; display: inline-block; }
+  .battery i::after { content: ""; position: absolute; left: 1px; top: 1px; bottom: 1px; width: var(--lvl, 70%); background: var(--green); border-radius: 1px; }
+
+  .greet h1 { font-size: clamp(1.3rem, 3vw, 1.8rem); font-weight: 700; }
+  .greet p { color: var(--muted); font-size: .9rem; margin-top: 2px; }
+
+  /* ---------- Cards ---------- */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); margin-top: 20px; }
+  .card {
+    background: linear-gradient(160deg, var(--glass-2), var(--glass));
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 20px;
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before { /* corner glow */
+    content: ""; position: absolute; top: 0; left: 0; width: 60px; height: 2px;
+    background: var(--accent, var(--cyan)); box-shadow: 0 0 12px var(--accent, var(--cyan));
+  }
+  .card h2 { font-size: .78rem; font-weight: 500; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+  .span-4 { grid-column: span 4; } .span-6 { grid-column: span 6; } .span-8 { grid-column: span 8; } .span-12 { grid-column: span 12; } .span-3 { grid-column: span 3; }
+
+  /* Rings */
+  .ring-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ring { position: relative; width: 190px; height: 190px; }
+  .ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .ring .track { stroke: rgba(255,255,255,.06); }
+  .ring .bar { transition: stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1), stroke .4s; filter: drop-shadow(0 0 8px currentColor); }
+  .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .center .num { font-size: 2.8rem; font-weight: 900; }
+  .ring .center small { color: var(--muted); font-size: .72rem; letter-spacing: .15em; text-transform: uppercase; }
+  .ring-note { margin-top: 12px; font-size: .9rem; color: var(--muted); max-width: 240px; }
+
+  /* Stat tiles */
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat .num { font-size: 1.8rem; font-weight: 700; }
+  .stat .num small { font-size: .8rem; color: var(--muted); font-family: "Inter"; font-weight: 500; margin-left: 4px; }
+  .stat .trend { font-size: .8rem; }
+  .up { color: var(--green); } .down { color: var(--red); }
+
+  /* Tabs */
+  .view { display: none; animation: fade .4s ease; }
+  .view.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .nav {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px; padding: 8px;
+    background: rgba(10,14,24,.85); border: 1px solid var(--line); border-radius: 999px;
+    backdrop-filter: blur(16px); z-index: 20;
+    max-width: calc(100% - 24px); overflow-x: auto;
+  }
+  .nav button {
+    background: none; border: 0; color: var(--muted); cursor: pointer;
+    padding: 10px 16px; border-radius: 999px; font: 600 .85rem "Inter";
+    display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: .25s;
+  }
+  .nav button.active { background: var(--cyan); color: #001018; box-shadow: 0 0 18px rgba(0,229,255,.5); }
+  .nav svg { width: 18px; height: 18px; }
+
+  /* Heart */
+  .bpm-big { display: flex; align-items: baseline; gap: 10px; }
+  .bpm-big .num { font-size: 4rem; font-weight: 900; color: var(--red); text-shadow: 0 0 20px rgba(255,61,110,.6); }
+  .heart-icon { animation: beat 1s infinite; display: inline-block; font-size: 2rem; }
+  @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } }
+  canvas { width: 100%; display: block; }
+  #ecg { height: 160px; }
+  .zones { display: flex; flex-direction: column; gap: 10px; }
+  .zone { display: grid; grid-template-columns: 70px 1fr 54px; align-items: center; gap: 10px; font-size: .82rem; }
+  .zone .bar-bg { height: 10px; background: rgba(255,255,255,.06); border-radius: 99px; overflow: hidden; }
+  .zone .bar-fg { height: 100%; border-radius: 99px; transition: width 1.2s; }
+  .zone span:last-child { text-align: right; color: var(--muted); }
+
+  /* Sleep */
+  #hypno { height: 200px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: .8rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stage { background: rgba(255,255,255,.03); border-radius: 12px; padding: 12px; border-left: 3px solid; }
+  .stage .num { font-size: 1.3rem; }
+  .stage small { color: var(--muted); font-size: .75rem; }
+
+  /* Weekly bars */
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 160px; }
+  .bars .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bars .b { width: 100%; max-width: 34px; border-radius: 8px 8px 4px 4px; transition: height 1s; position: relative; }
+  .bars .b::after { content: attr(data-v); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: .7rem; color: var(--text); }
+  .bars small { color: var(--muted); font-size: .72rem; }
+
+  /* Strain */
+  .gauge-label { display: flex; justify-content: space-between; color: var(--muted); font-size: .75rem; margin-top: 6px; }
+  .activity { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+  .activity:last-child { border: 0; }
+  .activity .tag { font-family: "Orbitron"; color: var(--cyan); }
+  form.add { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-top: 14px; }
+  select, input {
+    background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--text);
+    padding: 10px 12px; border-radius: 10px; font: 500 .9rem "Inter"; width: 100%;
+  }
+  select option { background: #0b1020; }
+  .btn {
+    background: linear-gradient(120deg, var(--cyan), var(--blue)); color: #001018; border: 0; cursor: pointer;
+    padding: 10px 18px; border-radius: 10px; font: 700 .9rem "Inter"; white-space: nowrap;
+    box-shadow: 0 0 16px rgba(0,229,255,.35); transition: transform .15s;
+  }
+  .btn:active { transform: scale(.96); }
+
+  /* Journal */
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .toggle-row:last-child { border: 0; }
+  .switch { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: rgba(255,255,255,.1); border-radius: 99px; cursor: pointer; transition: .3s; }
+  .slider::before { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .3s; }
+  .switch input:checked + .slider { background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+  .switch input:checked + .slider::before { transform: translateX(24px); background: #001018; }
+
+  .coach {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: linear-gradient(120deg, rgba(0,229,255,.1), rgba(164,107,255,.1));
+    border: 1px solid rgba(0,229,255,.3);
+  }
+  .coach .ai { font-size: 1.6rem; }
+  .coach p { font-size: .92rem; line-height: 1.5; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .span-4, .span-6, .span-8, .span-3 { grid-column: span 12; }
+    .stats-4 { grid-column: span 6 !important; }
+    .stages { grid-template-columns: repeat(2, 1fr); }
+    form.add { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .nav button span { display: none; }
+    .nav button { padding: 10px 14px; }
+    .bpm-big .num { font-size: 3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">NO<span>V</span>A</div>
+    <div class="device">
+      <span><span class="dot"></span>Band connected</span>
+      <span class="battery"><i id="batt"></i><b id="batt-txt">72%</b></span>
+    </div>
+  </div>
+
+  <div class="greet">
+    <h1 id="greeting">Good morning</h1>
+    <p id="today"></p>
+  </div>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section class="view active" id="overview">
+    <div class="grid">
+      <div class="card span-12 coach">
+        <div class="ai">🤖</div>
+        <p id="coach-msg"></p>
+      </div>
+
+      <div class="card span-4 ring-wrap" id="rec-card">
+        <h2>Recovery</h2>
+        <div class="ring">
+          <svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="85" fill="none" stroke-width="14"/><circle class="bar" id="ring-rec" cx="100" cy="100" r="85" fill="none" stroke-width="14" stroke-linecap="round"/></svg>
+          <div class="center"><div class="num" id="rec-val">0</div><small>%</small></div>
+        </div>
+        <p class="ring-note" id="rec-note"></p>
+      </div>
+
+      <div class="card span-4 ring-wrap" style="--accent: var(--blue)">
+        <h2>Day Strain</h2>
+        <div class="ring">
+          <svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="85" fill="none" stroke-width="14"/><circle class="bar" id="ring-strain" cx="100" cy="100" r="85" fill="none" stroke-width="14" stroke-linecap="round" stroke="#3d8bff" style="color:#3d8bff"/></svg>
+          <div class="center"><div class="num" id="strain-val">0</div><small>of 21</small></div>
+        </div>
+        <p class="ring-note" id="strain-note"></p>
+      </div>
+
+      <div class="card span-4 ring-wrap" style="--accent: var(--violet)">
+        <h2>Sleep Performance</h2>
+        <div class="ring">
+          <svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="85" fill="none" stroke-width="14"/><circle class="bar" id="ring-sleep" cx="100" cy="100" r="85" fill="none" stroke-width="14" stroke-linecap="round" stroke="#a46bff" style="color:#a46bff"/></svg>
+          <div class="center"><div class="num" id="sleep-val">0</div><small>%</small></div>
+        </div>
+        <p class="ring-note" id="sleep-note"></p>
+      </div>
+
+      <div class="card span-3 stats-4" style="--accent: var(--red)"><h2>Live HR</h2><div class="stat"><div class="num"><span class="live-bpm">--</span><small>bpm</small></div><div class="trend" style="color:var(--muted)">Resting: <b id="o-rhr"></b></div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--green)"><h2>HRV</h2><div class="stat"><div class="num"><span id="o-hrv"></span><small>ms</small></div><div class="trend up">▲ 6% vs 7-day avg</div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--cyan)"><h2>Blood Oxygen</h2><div class="stat"><div class="num"><span id="o-spo2"></span><small>%</small></div><div class="trend" style="color:var(--muted)">Normal range</div></div></div>
+      <div class="card span-3 stats-4" style="--accent: var(--yellow)"><h2>Calories</h2><div class="stat"><div class="num"><span id="o-cal"></span><small>kcal</small></div><div class="trend" style="color:var(--muted)">Active + resting</div></div></div>
+    </div>
+  </section>
+
+  <!-- ===== HEART ===== -->
+  <section class="view" id="heart">
+    <div class="grid">
+      <div class="card span-8" style="--accent: var(--red)">
+        <h2>Live Heart Rate</h2>
+        <div class="bpm-big"><span class="heart-icon">❤️</span><span class="num live-bpm">--</span><span style="color:var(--muted)">BPM</span></div>
+        <canvas id="ecg"></canvas>
+      </div>
+      <div class="card span-4" style="--accent: var(--red)">
+        <h2>Today's Range</h2>
+        <div class="stat" style="gap:14px">
+          <div><small style="color:var(--muted)">Min</small><div class="num" id="hr-min">--</div></div>
+          <div><small style="color:var(--muted)">Avg</small><div class="num" id="hr-avg">--</div></div>
+          <div><small style="color:var(--muted)">Max</small><div class="num" id="hr-max">--</div></div>
+        </div>
+      </div>
+      <div class="card span-12" style="--accent: var(--yellow)">
+        <h2>Heart Rate Zones · Today</h2>
+        <div class="zones" id="zones"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLEEP ===== -->
+  <section class="view" id="sleep">
+    <div class="grid">
+      <div class="card span-8" style="--accent: var(--violet)">
+        <h2>Last Night · <span id="sleep-window"></span></h2>
+        <canvas id="hypno"></canvas>
+        <div class="legend">
+          <span><i style="background:#ff8a3d"></i>Awake</span>
+          <span><i style="background:#00e5ff"></i>REM</span>
+          <span><i style="background:#3d8bff"></i>Light</span>
+          <span><i style="background:#a46bff"></i>Deep (SWS)</span>
+        </div>
+      </div>
+      <div class="card span-4" style="--accent: var(--violet)">
+        <h2>Sleep Need</h2>
+        <div class="stat"><div class="num" id="sleep-hours"></div><div class="trend" style="color:var(--muted)">slept of <b id="sleep-need"></b> needed</div></div>
+        <div style="margin-top:18px" class="stat"><div class="num" id="sleep-eff"></div><div class="trend" style="color:var(--muted)">sleep efficiency</div></div>
+        <div style="margin-top:18px" class="stat"><div class="num" id="sleep-dist"></div><div class="trend" style="color:var(--muted)">disturbances</div></div>
+      </div>
+      <div class="card span-12" style="--accent: var(--violet)">
+        <h2>Stage Breakdown</h2>
+        <div class="stages" id="stages"></div>
+      </div>
+      <div class="card span-12" style="--accent: var(--violet)">
+        <h2>Hours of Sleep · 7 Days</h2>
+        <div class="bars" id="sleep-bars"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RECOVERY ===== -->
+  <section class="view" id="recovery">
+    <div class="grid">
+      <div class="card span-4" style="--accent: var(--green)"><h2>HRV (RMSSD)</h2><div class="stat"><div class="num"><span id="r-hrv"></span><small>ms</small></div><div class="trend up">▲ above baseline</div></div></div>
+      <div class="card span-4" style="--accent: var(--red)"><h2>Resting Heart Rate</h2><div class="stat"><div class="num"><span id="r-rhr"></span><small>bpm</small></div><div class="trend up">▼ 2 bpm vs baseline</div></div></div>
+      <div class="card span-4" style="--accent: var(--cyan)"><h2>Respiratory Rate</h2><div class="stat"><div class="num"><span id="r-resp"></span><small>rpm</small></div><div class="trend" style="color:var(--muted)">Stable</div></div></div>
+      <div class="card span-6" style="--accent: var(--cyan)"><h2>Blood Oxygen (SpO₂)</h2><div class="stat"><div class="num"><span id="r-spo2"></span><small>%</small></div><div class="trend" style="color:var(--muted)">Overnight average</div></div></div>
+      <div class="card span-6" style="--accent: var(--yellow)"><h2>Skin Temperature</h2><div class="stat"><div class="num"><span id="r-temp"></span><small>°C</small></div><div class="trend" style="color:var(--muted)">+0.2° vs baseline</div></div></div>
+      <div class="card span-12" style="--accent: var(--green)">
+        <h2>Recovery · 7 Days</h2>
+        <div class="bars" id="rec-bars"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STRAIN ===== -->
+  <section class="view" id="strain">
+    <div class="grid">
+      <div class="card span-6" style="--accent: var(--blue)">
+        <h2>Strain Target</h2>
+        <div class="stat"><div class="num"><span id="s-val"></span><small>/ 21</small></div><div class="trend" style="color:var(--muted)">Optimal today: <b id="s-target"></b></div></div>
+        <div class="zone" style="grid-template-columns:1fr;margin-top:16px"><div class="bar-bg" style="height:14px"><div class="bar-fg" id="s-bar" style="background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet))"></div></div></div>
+        <div class="gauge-label"><span>Light 0–9</span><span>Moderate 10–13</span><span>High 14–17</span><span>All out 18+</span></div>
+      </div>
+      <div class="card span-6" style="--accent: var(--yellow)">
+        <h2>Steps & Energy</h2>
+        <div class="stat"><div class="num"><span id="s-steps"></span><small>steps</small></div></div>
+        <div class="stat" style="margin-top:14px"><div class="num"><span id="s-cal"></span><small>kcal burned</small></div></div>
+      </div>
+      <div class="card span-12" style="--accent: var(--blue)">
+        <h2>Activities</h2>
+        <div id="activities"></div>
+        <form class="add" id="add-form">
+          <select id="a-type">
+            <option>🏃 Running</option><option>🚴 Cycling</option><option>🏋️ Weightlifting</option>
+            <option>🧘 Yoga</option><option>🏊 Swimming</option><option>⚽ Football</option><option>🏸 Badminton</option>
+          </select>
+          <input type="number" id="a-min" placeholder="Minutes" min="5" max="300" required>
+          <select id="a-int">
+            <option value="0.6">Light</option><option value="1" selected>Moderate</option><option value="1.5">Hard</option>
+          </select>
+          <button class="btn" type="submit">+ Log</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== JOURNAL ===== -->
+  <section class="view" id="journal">
+    <div class="grid">
+      <div class="card span-12" style="--accent: var(--cyan)">
+        <h2>Daily Journal · Yesterday</h2>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:8px">Log behaviours so NOVA can learn what affects your recovery.</p>
+        <div id="journal-list"></div>
+        <button class="btn" style="margin-top:16px" id="save-journal">Save Journal</button>
+        <span id="journal-msg" style="margin-left:12px;color:var(--green);font-size:.9rem"></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Bottom nav -->
+<nav class="nav" id="nav">
+  <button class="active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Overview</span></button>
+  <button data-view="heart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg><span>Heart</span></button>
+  <button data-view="sleep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>Sleep</span></button>
+  <button data-view="recovery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><span>Recovery</span></button>
+  <button data-view="strain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Strain</span></button>
+  <button data-view="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h8M8 13h6"/></svg><span>Journal</span></button>
+</nav>
+
+<script>
+/* ============ SIMULATED DATA (replace with real band data) ============ */
+const data = {
+  battery: 72,
+  recovery: 78,
+  strain: 11.4,
+  strainTarget: "12.5 – 14.0",
+  sleepPerf: 86,
+  sleepStart: "23:12", sleepEnd: "06:48",
+  sleepNeed: 8.2,
+  efficiency: 93,
+  disturbances: 7,
+  rhr: 54, hrv: 82, resp: 14.6, spo2: 97, temp: 33.4,
+  steps: 8432, calories: 2140,
+  week: { labels: ["Thu","Fri","Sat","Sun","Mon","Tue","Wed"],
+          sleep: [6.8, 7.4, 8.1, 6.2, 7.0, 7.6, 7.3],
+          recovery: [62, 71, 85, 38, 55, 69, 78] },
+  zones: [ // minutes
+    { name: "Zone 1", min: 142, color: "#3d8bff" },
+    { name: "Zone 2", min: 58,  color: "#00e5ff" },
+    { name: "Zone 3", min: 24,  color: "#2bff88" },
+    { name: "Zone 4", min: 11,  color: "#ffd23f" },
+    { name: "Zone 5", min: 3,   color: "#ff3d6e" }
+  ],
+  activities: [
+    { type: "🏃 Running", min: 35, strain: 9.2, avg: 152 },
+    { type: "🧘 Yoga",    min: 20, strain: 2.2, avg: 98 }
+  ],
+  // [stage, minutes]  stage: 0 Awake, 1 REM, 2 Light, 3 Deep
+  hypnogram: [[2,15],[3,40],[2,25],[1,15],[0,4],[2,30],[3,35],[2,20],[1,25],[2,35],[0,3],[3,15],[2,30],[1,35],[2,25],[0,5],[1,30],[2,20],[0,9]],
+  journal: ["Alcohol", "Caffeine after 2 PM", "Late meal", "Screen time in bed", "Meditation", "Hydrated well", "Stretching", "Felt stressed"]
+};
+/* ===================================================================== */
+
+const $ = id => document.getElementById(id);
+const C = 2 * Math.PI * 85;
+const recColor = v => v >= 67 ? "#2bff88" : v >= 34 ? "#ffd23f" : "#ff3d6e";
+
+function setRing(el, pct, color) {
+  el.style.strokeDasharray = C;
+  el.style.strokeDashoffset = C;
+  if (color) { el.setAttribute("stroke", color); el.style.color = color; }
+  requestAnimationFrame(() => setTimeout(() => el.style.strokeDashoffset = C * (1 - pct / 100), 80));
+}
+function countUp(el, target, dec = 0, dur = 1200) {
+  const t0 = performance.now();
+  const step = t => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (target * e).toFixed(dec);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/* Header */
+const now = new Date();
+const hr = now.getHours();
+$("greeting").textContent = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+$("today").textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+$("batt").style.setProperty("--lvl", data.battery + "%");
+$("batt-txt").textContent = data.battery + "%";
+
+/* Overview */
+const rc = recColor(data.recovery);
+$("rec-card").style.setProperty("--accent", rc);
+setRing($("ring-rec"), data.recovery, rc);
+countUp($("rec-val"), data.recovery);
+$("rec-val").style.color = rc;
+$("rec-note").textContent = data.recovery >= 67 ? "You're primed. Your body is ready to take on high strain."
+  : data.recovery >= 34 ? "Moderately recovered. Maintain, don't overreach." : "Low recovery. Prioritise rest today.";
+function renderStrain() {
+  setRing($("ring-strain"), data.strain / 21 * 100);
+  $("strain-val").textContent = data.strain.toFixed(1);
+  $("s-val").textContent = data.strain.toFixed(1);
+  $("s-bar").style.width = (data.strain / 21 * 100) + "%";
+  $("strain-note").textContent = data.strain < 10 ? "Light day so far." : data.strain < 14 ? "Moderate load. On track." : data.strain < 18 ? "High strain. Plan recovery." : "All out. Rest tonight.";
+}
+renderStrain();
+setRing($("ring-sleep"), data.sleepPerf);
+countUp($("sleep-val"), data.sleepPerf);
+$("sleep-note").textContent = "Strong night. Deep and REM sleep were above your average.";
+$("coach-msg").innerHTML = `<b>NOVA Coach:</b> Recovery is <b style="color:${rc}">${data.recovery}%</b> and HRV is above baseline. Aim for a strain of <b>${data.strainTarget}</b> today, and get to bed by <b>22:45</b> to hit your sleep need.`;
+countUp($("o-hrv"), data.hrv); $("o-rhr").textContent = data.rhr + " bpm";
+countUp($("o-spo2"), data.spo2); countUp($("o-cal"), data.calories);
+
+/* Recovery tab */
+$("r-hrv").textContent = data.hrv; $("r-rhr").textContent = data.rhr; $("r-resp").textContent = data.resp;
+$("r-spo2").textContent = data.spo2; $("r-temp").textContent = data.temp;
+
+function bars(el, values, max, colorFn, fmt = v => v) {
+  el.innerHTML = values.map((v, i) => `
+    <div class="col"><div class="b" data-v="${fmt(v)}" style="height:0;background:${colorFn(v)};box-shadow:0 0 12px ${colorFn(v)}66"></div><small>${data.week.labels[i]}</small></div>`).join("");
+  setTimeout(() => el.querySelectorAll(".b").forEach((b, i) => b.style.height = (values[i] / max * 85) + "%"), 100);
+}
+bars($("rec-bars"), data.week.recovery, 100, recColor, v => v + "%");
+bars($("sleep-bars"), data.week.sleep, 10, () => "#a46bff", v => v + "h");
+
+/* Sleep tab */
+const totalMin = data.hypnogram.reduce((s, x) => s + x[1], 0);
+const byStage = [0, 0, 0, 0];
+data.hypnogram.forEach(([s, m]) => byStage[s] += m);
+const asleep = totalMin - byStage[0];
+const fmtH = m => `${Math.floor(m / 60)}h ${m % 60}m`;
+$("sleep-window").textContent = `${data.sleepStart} – ${data.sleepEnd}`;
+$("sleep-hours").textContent = fmtH(asleep);
+$("sleep-need").textContent = data.sleepNeed + "h";
+$("sleep-eff").textContent = data.efficiency + "%";
+$("sleep-dist").textContent = data.disturbances;
+const stageInfo = [["Awake", "#ff8a3d"], ["REM", "#00e5ff"], ["Light", "#3d8bff"], ["Deep", "#a46bff"]];
+$("stages").innerHTML = stageInfo.map(([n, c], i) => `
+  <div class="stage" style="border-color:${c}"><small>${n}</small><div class="num">${fmtH(byStage[i])}</div><small>${Math.round(byStage[i] / totalMin * 100)}%</small></div>`).join("");
+
+function setupCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  const r = cv.getBoundingClientRect();
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  return { ctx, w: r.width, h: r.height };
+}
+function drawHypno() {
+  const cv = $("hypno"); if (!cv.offsetParent) return;
+  const { ctx, w, h } = setupCanvas(cv);
+  const pad = 40, rowH = (h - 20) / 4;
+  ctx.font = "11px Inter"; ctx.fillStyle = "#7d8aa8";
+  stageInfo.forEach(([n], i) => {
+    ctx.fillText(n, 0, 14 + i * rowH + rowH / 2);
+    ctx.strokeStyle = "rgba(120,200,255,.08)"; ctx.beginPath();
+    ctx.moveTo(pad, 10 + i * rowH + rowH / 2); ctx.lineTo(w, 10 + i * rowH + rowH / 2); ctx.stroke();
+  });
+  let x = pad; const scale = (w - pad) / totalMin;
+  data.hypnogram.forEach(([s, m]) => {
+    const y = 10 + s * rowH + rowH * 0.2, bw = m * scale;
+    const g = ctx.createLinearGradient(0, y, 0, y + rowH * .6);
+    g.addColorStop(0, stageInfo[s][1]); g.addColorStop(1, stageInfo[s][1] + "55");
+    ctx.fillStyle = g; ctx.shadowColor = stageInfo[s][1]; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(x, y, Math.max(bw - 1, 1), rowH * .6, 4); ctx.fill();
+    x += bw;
+  });
+  ctx.shadowBlur = 0;
+}
+
+/* Heart tab */
+const maxHR = 190;
+const totalZone = data.zones.reduce((s, z) => s + z.min, 0);
+$("zones").innerHTML = data.zones.map((z, i) => `
+  <div class="zone"><span>${z.name} <small style="color:var(--muted)">${50 + i * 10}–${60 + i * 10}%</small></span>
+  <div class="bar-bg"><div class="bar-fg" style="width:0;background:${z.color};box-shadow:0 0 10px ${z.color}"></div></div><span>${z.min}m</span></div>`).join("");
+function animateZones() {
+  document.querySelectorAll("#zones .bar-fg").forEach((b, i) => b.style.width = (data.zones[i].min / totalZone * 100) + "%");
+}
+
+/* Live heart rate + ECG simulation */
+let bpm = 68, phase = 0, buf = [], hrMin = 999, hrMax = 0, hrSum = 0, hrN = 0;
+function ecgWave(p) {
+  const g = (c, w, a) => a * Math.exp(-Math.pow((p - c) / w, 2));
+  return g(.12, .025, .12) - g(.22, .008, .15) + g(.25, .01, 1) - g(.28, .01, .25) + g(.45, .04, .25);
+}
+setInterval(() => {
+  bpm = Math.round(Math.max(55, Math.min(110, bpm + (Math.random() - .5) * 4 + (68 - bpm) * .1)));
+  document.querySelectorAll(".live-bpm").forEach(e => e.textContent = bpm);
+  hrMin = Math.min(hrMin, bpm); hrMax = Math.max(hrMax, bpm); hrSum += bpm; hrN++;
+  $("hr-min").textContent = hrMin; $("hr-max").textContent = hrMax; $("hr-avg").textContent = Math.round(hrSum / hrN);
+  document.querySelectorAll(".heart-icon").forEach(h => h.style.animationDuration = (60 / bpm) + "s");
+}, 1000);
+
+let ecgCtx = null, last = performance.now();
+function loopECG(t) {
+  const dt = (t - last) / 1000; last = t;
+  const cv = $("ecg");
+  if (cv.offsetParent) {
+    if (!ecgCtx || cv.width === 0) ecgCtx = setupCanvas(cv);
+    const { ctx, w, h } = ecgCtx;
+    phase = (phase + dt * bpm / 60) % 1;
+    buf.push(ecgWave(phase));
+    const maxPts = Math.floor(w / 2);
+    if (buf.length > maxPts) buf.splice(0, buf.length - maxPts);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(255,61,110,.08)";
+    for (let gx = 0; gx < w; gx += 20) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke(); }
+    for (let gy = 0; gy < h; gy += 20) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
+    ctx.beginPath(); ctx.lineWidth = 2.2; ctx.strokeStyle = "#ff3d6e"; ctx.shadowColor = "#ff3d6e"; ctx.shadowBlur = 12;
+    buf.forEach((v, i) => { const x = i * 2, y = h * .7 - v * h * .55; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke(); ctx.shadowBlur = 0;
+    const lx = (buf.length - 1) * 2, ly = h * .7 - buf[buf.length - 1] * h * .55;
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(lx, ly, 3.5, 0, 7); ctx.fill();
+  }
+  requestAnimationFrame(loopECG);
+}
+requestAnimationFrame(loopECG);
+
+/* Strain tab */
+countUp($("s-steps"), data.steps); countUp($("s-cal"), data.calories);
+$("s-target").textContent = data.strainTarget;
+function renderActivities() {
+  $("activities").innerHTML = data.activities.map(a => `
+    <div class="activity"><span>${a.type} <small style="color:var(--muted)">· ${a.min} min · avg ${a.avg} bpm</small></span><span class="tag">${a.strain.toFixed(1)}</span></div>`).join("")
+    || `<p style="color:var(--muted)">No activities yet.</p>`;
+}
+renderActivities();
+$("add-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const min = +$("a-min").value, k = +$("a-int").value;
+  // strain grows logarithmically so it gets harder to add as you approach 21
+  const add = Math.min(21 - data.strain, (21 - data.strain) * (1 - Math.exp(-min * k / 120)));
+  data.activities.unshift({ type: $("a-type").value, min, strain: add, avg: Math.round(95 + 40 * k) });
+  data.strain = Math.min(21, data.strain + add);
+  data.calories += Math.round(min * 7 * k);
+  $("o-cal").textContent = data.calories; $("s-cal").textContent = data.calories;
+  renderActivities(); renderStrain(); e.target.reset();
+});
+
+/* Journal */
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem("nova-journal") || "{}"); } catch (e) {}
+$("journal-list").innerHTML = data.journal.map((q, i) => `
+  <div class="toggle-row"><span>${q}</span><label class="switch"><input type="checkbox" data-q="${q}" ${saved[q] ? "checked" : ""}><span class="slider"></span></label></div>`).join("");
+$("save-journal").addEventListener("click", () => {
+  const out = {};
+  document.querySelectorAll("#journal-list input").forEach(i => out[i.dataset.q] = i.checked);
+  try { localStorage.setItem("nova-journal", JSON.stringify(out)); } catch (e) {}
+  $("journal-msg").textContent = "✓ Saved";
+  setTimeout(() => $("journal-msg").textContent = "", 2000);
+});
+
+/* Navigation */
+document.querySelectorAll("#nav button").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  btn.classList.add("active");
+  $(btn.dataset.view).classList.add("active");
+  ecgCtx = null;
+  if (btn.dataset.view === "sleep") drawHypno();
+  if (btn.dataset.view === "heart") setTimeout(animateZones, 50);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}));
+window.addEventListener("resize", () => { ecgCtx = null; drawHypno(); });
+</script>
+</body>
+</html>
